@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Главная</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #fff;
+            color: #000;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-weight: normal;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        img {
+            flex: auto;
+            width: 100%;
+            height: auto;
+            border-radius: 10%;
+        }
+
+        .category {
+            border: 3px solid #ccc;
+            background-color: palegoldenrod;
+            padding: 20px;
+            width: 120px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .pages-panel {
+            margin: 0 auto;
+            padding: 0px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'%3E%3Crect x='0' y='0' width='19' height='19' fill-opacity='0.6' fill='%23E6E6E6'/%3E%3C/svg%3E");
+
+            border: 3px solid #00000028;
+        }
+        
+        .flex-container {
+            padding: 30px;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+
+        .files,
+        .subfolders {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .file {
+            background: white;
+            border: 2px solid #bbb;
+            padding: 20px;
+            width: 120px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .file:hover,
+        .category:hover {
+            transform: scale(1.05);
+            border-color: #999;
+        }
+        .file span,
+        .category span {
+            display: block;
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Файловый менеджер</h1>
+    <h2>На сайте файловый менеджер ОМG</h2>
+    <div id='container_container' width=100%></div>
+
+</body>
+<script>
+    async function renderDirectory(path = '%2F') {
+        let contents;
+        await fetch('/directory?path=' + path)
+            .then(res => res.json())
+            .then(data => {
+                contents = data;
+            });
+
+        const container = renderWindow();
+        if (contents.directories != null)
+            renderInnerDirectories(contents.directories, container, path);
+        if (contents.files != null)
+            renderInnerFiles(contents.files, container, path);
+    }
+
+    function renderWindow() {
+        const window = document.createElement('div');
+        const container_container = document.getElementById('container_container');
+        window.className = 'pages-panel';
+        window.localName = 'container';
+        
+        container_container.appendChild(window);
+        
+        const closeButton = document.createElement('h1');
+        window.appendChild(closeButton);
+        closeButton.innerText = '❌';
+        closeButton.addEventListener('click',()=>container_container.removeChild(window));
+        const container = document.createElement('div');
+        container.className = 'flex-container';
+        window.appendChild(container);
+        
+        return container;
+    }
+    
+    function renderInnerDirectories(directories, container, path) {
+        directories.forEach(dirName => {
+            const div = document.createElement('div');
+            container.appendChild(div);
+            div.className = 'category';
+            div.innerHTML = `<img src = "${path + '/'+dirName}/icon.webm">${dirName}`;
+            div.dataset.folder = dirName;
+            div.addEventListener('click', () =>
+                renderDirectory(path + dirName + '%2F')
+            );
+        });
+    }
+
+    function renderInnerFiles(files, container, path) {
+        files.forEach( fileName => {
+            const div = document.createElement('div');
+            container.appendChild(div);
+            div.className = 'file';
+            
+            div.innerHTML = '<h1>🔵</h1>'+fileName.slice(1);
+            div.dataset.folder = fileName;
+            div.addEventListener('click', () =>
+                open(document.URL+path+"/"+fileName)
+            );
+        });
+    }
+    
+    renderDirectory();
+</script>
+
+</html>
